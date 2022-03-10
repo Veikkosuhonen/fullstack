@@ -40,6 +40,15 @@ query {
 }
 `
 
+export const AUTHOR_NAMES = gql`
+query {
+  allAuthors {
+    name
+    born
+  }
+}
+`
+
 export const SET_BORN = gql`
 mutation setBornYear($author: String!, $born: Int!) {
   editAuthor(name: $author, setBornTo: $born) {

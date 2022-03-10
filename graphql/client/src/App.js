@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
-import { Button, CircularProgress, Container, Paper, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material"
+import { Button, CircularProgress, Container, FormControl, InputLabel, MenuItem, Paper, Select, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material"
 import { Box } from "@mui/system";
-import { ADD_BOOK, ALL_AUTHORS, FIND_BOOKS, SET_BORN } from "./queries";
+import { ADD_BOOK, ALL_AUTHORS, AUTHOR_NAMES, FIND_BOOKS, SET_BORN } from "./queries";
 
 const AllAuthors = () => {
   const result = useQuery(ALL_AUTHORS)
@@ -116,6 +116,7 @@ const AddBook = () => {
 }
 
 const SetBorn = () => {
+  const result = useQuery(AUTHOR_NAMES)
   const [author, setAuthor] = useState("")
   const [born, setBorn] = useState(2000)
 
@@ -123,9 +124,12 @@ const SetBorn = () => {
     refetchQueries: [ {query: ALL_AUTHORS }]
   })
 
+  if (result.loading) {
+    return <CircularProgress />
+  }
+
   const onSubmit = (event) => {
     event.preventDefault()
-    console.log({ author, born })
     setBornYear({ variables: { author, born: Number(born) }})
     setAuthor("")
     setBorn(2000)
@@ -135,9 +139,20 @@ const SetBorn = () => {
     <form onSubmit={onSubmit}>
       <Typography variant="h3" mt={5}>Set year of birth</Typography>
       <Box display="flex" flexDirection="column" rowGap={3} mt={2}>
-        <TextField label="author" value={author} onChange={event => setAuthor(event.target.value)} />
+        <FormControl fullWidth>
+          <InputLabel id="demo-simple-select-label">Author</InputLabel>
+          <Select
+            value={author}
+            label="Author"
+            onChange={(event) => { setAuthor(event.target.value) }}
+          >
+            {result.data.allAuthors.map(author => 
+              <MenuItem value={author.name}>{author.name}</MenuItem>
+            )}
+          </Select>
+        </FormControl>
         <TextField label="born" type="number" value={born} onChange={event => setBorn(event.target.value)} />
-        <Button type="submit" variant="outlined">Add</Button>
+        <Button type="submit" variant="outlined">Update</Button>
       </Box>
     </form>
   )
