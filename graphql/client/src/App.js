@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
 import { Button, CircularProgress, Container, Paper, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material"
 import { Box } from "@mui/system";
-import { ADD_BOOK, ALL_AUTHORS, FIND_BOOKS } from "./queries";
+import { ADD_BOOK, ALL_AUTHORS, FIND_BOOKS, SET_BORN } from "./queries";
 
 const AllAuthors = () => {
   const result = useQuery(ALL_AUTHORS)
@@ -34,6 +34,7 @@ const AllAuthors = () => {
             </Button>
           </Box>
         ))}
+        <SetBorn />
       </Box>
     </Paper>
   );
@@ -108,6 +109,34 @@ const AddBook = () => {
           <Button type="button" onClick={onGenreAdd}>Add</Button>
         </Box>
         {newBook.genres.map((genre, index) => <Typography key={index}>{genre}</Typography>)}
+        <Button type="submit" variant="outlined">Add</Button>
+      </Box>
+    </form>
+  )
+}
+
+const SetBorn = () => {
+  const [author, setAuthor] = useState("")
+  const [born, setBorn] = useState(2000)
+
+  const [setBornYear] = useMutation(SET_BORN, {
+    refetchQueries: [ {query: ALL_AUTHORS }]
+  })
+
+  const onSubmit = (event) => {
+    event.preventDefault()
+    console.log({ author, born })
+    setBornYear({ variables: { author, born: Number(born) }})
+    setAuthor("")
+    setBorn(2000)
+  }
+
+  return (
+    <form onSubmit={onSubmit}>
+      <Typography variant="h3" mt={5}>Set year of birth</Typography>
+      <Box display="flex" flexDirection="column" rowGap={3} mt={2}>
+        <TextField label="author" value={author} onChange={event => setAuthor(event.target.value)} />
+        <TextField label="born" type="number" value={born} onChange={event => setBorn(event.target.value)} />
         <Button type="submit" variant="outlined">Add</Button>
       </Box>
     </form>
