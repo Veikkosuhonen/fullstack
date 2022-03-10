@@ -1,18 +1,8 @@
-import { gql, useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
-import { Button, Container, Paper, Typography } from "@mui/material"
+import { Button, CircularProgress, Container, Paper, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material"
 import { Box } from "@mui/system";
-
-const ALL_AUTHORS = gql`
-  query {
-    allAuthors {
-      name
-      born
-      id
-      bookCount
-    }
-  }
-`
+import { ADD_BOOK, ALL_AUTHORS, FIND_BOOKS } from "./queries";
 
 const AllAuthors = () => {
   const result = useQuery(ALL_AUTHORS)
@@ -37,7 +27,7 @@ const AllAuthors = () => {
       <Box padding={2}>
         <Typography variant="h2" mb={2}>All authors</Typography>
         {result.data.allAuthors.map(author => (
-          <Box display="flex" alignItems="center">
+          <Box display="flex" alignItems="center" key={author.id}>
             <Typography mr={2}>{author.name} born in {author.born}, {author.bookCount} books</Typography>
             <Button onClick={() => setAuthorName(author.name)}>
               Show books
@@ -49,25 +39,14 @@ const AllAuthors = () => {
   );
 }
 
-const FIND_BOOKS = gql`
-  query findBooks($authorName: String) {
-    allBooks(author: $authorName) {
-      title
-      author
-      published
-      genres
-    }
-  }
-`
-
 const Books = ({ books, onClose }) => {
   return (
     <Paper variant="outlined">
       <Box padding={2}>
         <Typography variant="h2" mb={2}>Books</Typography>
         {books.map(book => (
-          <Typography>
-            {book.title} {book.published}
+          <Typography key={book.id}>
+            {book.title} {book.author} {book.published}
           </Typography>
         ))}
         <Button onClick={onClose}>Close</Button>
@@ -76,12 +55,83 @@ const Books = ({ books, onClose }) => {
   )
 }
 
-const App = () => {
+const AllBooks = () => {
+  const result = useQuery(FIND_BOOKS)
+
+  if (result.loading) {
+    return <CircularProgress />
+  }
+  return (
+    <Paper variant="outlined">
+      <Box padding={2}>
+        <Typography variant="h2" mb={2}>Books</Typography>
+        {result.data.allBooks.map(book => (
+          <Typography key={book.id}>
+            {book.title}, {book.author} {book.published}
+          </Typography>
+        ))}
+        <AddBook />
+      </Box>
+    </Paper>
+  )
+}
+
+const AddBook = () => {
+  const [newBook, setNewBook] = useState({ title: "", author: "", published: 2000, genres: [] })
+  const [genre, setGenre] = useState("")
+
+  const [addBook] = useMutation(ADD_BOOK, {
+    refetchQueries: [ { query: FIND_BOOKS }]
+  })
+
+  const onSubmit = (event) => {
+    event.preventDefault()
+    addBook({ variables: newBook })
+    setNewBook({ title: "", author: "", published: 2000, genres: [] })
+  }
+
+  const onGenreAdd = () => {
+    if (!genre) return
+    setNewBook({ ...newBook, genres: newBook.genres.concat(genre)})
+    setGenre("")
+  }
 
   return (
+    <form onSubmit={onSubmit}>
+      <Typography variant="h3" mt={5}>Add book</Typography>
+      <Box display="flex" flexDirection="column" rowGap={3} mt={2}>
+        <TextField label="title" value={newBook.title} onChange={(event => setNewBook({ ...newBook, title: event.target.value }))} />
+        <TextField label="author" autoComplete="off" value={newBook.author} onChange={(event => setNewBook({ ...newBook, author: event.target.value }))} />
+        <TextField label="published" type="number" value={newBook.published} onChange={(event => setNewBook({ ...newBook, published: event.target.value }))} />
+        <Box display="flex">
+          <TextField label="genre" value={genre} onChange={event => setGenre(event.target.value)}/>
+          <Button type="button" onClick={onGenreAdd}>Add</Button>
+        </Box>
+        {newBook.genres.map((genre, index) => <Typography key={index}>{genre}</Typography>)}
+        <Button type="submit" variant="outlined">Add</Button>
+      </Box>
+    </form>
+  )
+}
+
+const Tabs = ({ value, onChange }) => (
+  <Box display="flex">
+    <ToggleButtonGroup value={value} exclusive onChange={onChange}>
+      <ToggleButton value="authors">Authors</ToggleButton>
+      <ToggleButton value="books">Books</ToggleButton>
+    </ToggleButtonGroup>
+  </Box>
+)
+
+const App = () => {
+  const [tab, setTab] = useState("authors")
+  console.log(tab)
+  return (
     <Container>
-      <Typography variant="h1" mb={4}>Books</Typography>
-      <AllAuthors />
+      <Typography variant="h1" mb={4}>GraphQL Books</Typography>
+      <Tabs value={tab} onChange={(event, value) => setTab(value)}/>
+      {tab === "authors" && <AllAuthors />}
+      {tab === "books" && <AllBooks />}
     </Container>
   )
 }
