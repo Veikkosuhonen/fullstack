@@ -71,19 +71,14 @@ const resolvers = {
         },
 
         editAuthor: async (root, args) => {
-            const author = await Author.find({ name: args.name })
-            if (!author) {
-                return null
-            }
-            author.born = args.setBornTo
             try {
-                await author.save()
+                const author = await Author.findOneAndUpdate({ name: args.name }, { $set: { born: args.setBornTo } }, { returnDocument: "after" })
+                return author
             } catch (error) {
                 throw new UserInputError(error.message, {
                     invalidArgs: args,
                 })
             }
-            return author
         }
     }
 }
