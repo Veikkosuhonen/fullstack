@@ -47,7 +47,7 @@ const Books = ({ books, onClose }) => {
         <Typography variant="h2" mb={2}>Books</Typography>
         {books.map(book => (
           <Typography key={book.id}>
-            {book.title} {book.author} {book.published}
+            {book.title} {book.author.name} {book.published}
           </Typography>
         ))}
         <Button onClick={onClose}>Close</Button>
@@ -58,6 +58,7 @@ const Books = ({ books, onClose }) => {
 
 const AllBooks = () => {
   const result = useQuery(FIND_BOOKS)
+  console.log(result)
 
   if (result.loading) {
     return <CircularProgress />
@@ -68,7 +69,7 @@ const AllBooks = () => {
         <Typography variant="h2" mb={2}>Books</Typography>
         {result.data.allBooks.map(book => (
           <Typography key={book.id}>
-            {book.title}, {book.author} {book.published}
+            {book.title}, {book.author.name} {book.published}
           </Typography>
         ))}
         <AddBook />
@@ -169,7 +170,6 @@ const Tabs = ({ value, onChange }) => (
 
 const App = () => {
   const [tab, setTab] = useState("authors")
-  console.log(tab)
   return (
     <Container>
       <Typography variant="h1" mb={4}>GraphQL Books</Typography>

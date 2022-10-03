@@ -47,25 +47,34 @@ const resolvers = {
     Query: {
         bookCount: async () => Book.count(),
         authorCount: async () => Author.count(),
-        allBooks: async (root, { author, genre }) => Book.find({}),
-        allAuthors: async () => Author.find({})
+        allBooks: async (root, { author, genre }) => {
+            const books = await Book.find({}).populate({ path: 'author' })
+            if (author) {
+                return books.filter((book) => book.author.name.toLowerCase().includes(author.toLowerCase()))
+            }
+            return books
+        },
+        allAuthors: async () => Author.find({}).populate('bookCount')
     },
     Mutation: {
         addBook: async (root, args) => {
             const author = await Author.findOne({ name: args.author })
             if (!author) {
-                throw new UserInputError("Author not found", {
+                const inputError = new UserInputError("Author not found", {
                     invalidArgs: args,
                 })
+                console.log(inputError)
+                throw inputError
             }
             const newBook = new Book({ ...args, author })
             try {
                 await newBook.save()
             } catch (error) {
-                throw new UserInputError("Book could not be saved", {
+                const inputError = new UserInputError(error.message, {
                     invalidArgs: args,
-                    error,
                 })
+                console.log(inputError)
+                throw inputError
             }
             return newBook
         },
@@ -75,9 +84,11 @@ const resolvers = {
                 const author = await Author.findOneAndUpdate({ name: args.name }, { $set: { born: args.setBornTo } }, { returnDocument: "after" })
                 return author
             } catch (error) {
-                throw new UserInputError(error.message, {
+                const inputError = new UserInputError(error.message, {
                     invalidArgs: args,
                 })
+                console.log(inputError)
+                throw inputError
             }
         }
     }

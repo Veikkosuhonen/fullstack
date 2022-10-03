@@ -21,7 +21,10 @@ export const FIND_BOOKS = gql`
 query findBooks($authorName: String) {
   allBooks(author: $authorName) {
     title
-    author
+    author {
+      name
+      born
+    }
     published
     genres
     id

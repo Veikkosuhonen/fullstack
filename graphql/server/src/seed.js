@@ -91,7 +91,7 @@ const seed = async () => {
         }))
         console.log("Books seeded")
     } catch (e) {
-        console.log("Seeding could not be completed")
+        console.log("Seeding could not be completed", e)
     }
 }
 
